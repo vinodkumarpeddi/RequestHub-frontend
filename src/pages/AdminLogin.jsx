@@ -38,8 +38,8 @@ const AdminLogin = () => {
     try {
       setLoading(true); // Start spinner
       axios.defaults.withCredentials = true;
-
-      const response = await axios.post(`${backendUrl}/api/admin-add/login2`, {
+      console.log(import.meta.env.VITE_BACKEND_URL);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin-add/login2`, {
         email,
         password
       });
