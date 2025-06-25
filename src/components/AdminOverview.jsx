@@ -16,7 +16,7 @@ const AdminDashboardOverview = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get('/api/dashboard-overview', { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/dashboard-overview`, { withCredentials: true });
         setStats(res.data);
         const mockLastLogin = new Date();
         mockLastLogin.setHours(mockLastLogin.getHours() - 4);
