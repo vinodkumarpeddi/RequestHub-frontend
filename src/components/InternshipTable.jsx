@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import "../styles/InternshipTable.css";
-import { useToast } from '../context/ToastContext';
 
 function InternshipTable() {
-  const { addToast } = useToast();
-
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [loadingAction, setLoadingAction] = useState({ id: null, type: null });
 
   useEffect(() => {
     fetchApplications();
@@ -20,16 +18,9 @@ function InternshipTable() {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`);
       const data = await response.json();
       setApplications(data);
-      setLoading(false);
     } catch (error) {
       console.error("Error Fetching Applications:", error);
-      addToast(
-        {
-          title: 'Error',
-          body: "Failed To Fetch !"
-        },
-        'error'
-      );
+    } finally {
       setLoading(false);
     }
   };
@@ -51,6 +42,8 @@ function InternshipTable() {
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
 
   const handleApprove = async (id) => {
+    setLoadingAction({ id, type: "approve" });
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application`, {
         method: "PUT",
@@ -60,24 +53,21 @@ function InternshipTable() {
         body: JSON.stringify({ id }),
       });
 
-      const data = await response.json();
-
-      // Check for success more flexibly
-      
-
-        // Update local state immediately
-        setApplications(prev => prev.map(app =>
-          app._id === id ? { ...app, status: "Approved" } : app
-        ));
-
-        fetchApplications();
-      
+      if (response.ok) {
+        setApplications(prev =>
+          prev.map(app => app._id === id ? { ...app, status: "Approved" } : app)
+        );
+      }
     } catch (error) {
       console.error("Error Approving Application:", error);
+    } finally {
+      setLoadingAction({ id: null, type: null });
     }
   };
 
   const handleReject = async (id) => {
+    setLoadingAction({ id, type: "reject" });
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application`, {
         method: "PUT",
@@ -87,40 +77,20 @@ function InternshipTable() {
         body: JSON.stringify({ id }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        addToast(
-          { title: 'Success', body: 'Application Rejected Successfully!' },
-          'success'
-        );
-
-        // Update local state immediately
-        setApplications(prev => prev.map(app =>
-          app._id === id ? { ...app, status: "Rejected" } : app
-        ));
-
-        fetchApplications();
-
-      } else {
-        addToast(
-          { title: 'Error', body: data.message || 'Rejection Failed' },
-          'error'
+        setApplications(prev =>
+          prev.map(app => app._id === id ? { ...app, status: "Rejected" } : app)
         );
       }
     } catch (error) {
       console.error("Error Rejecting Application:", error);
-      addToast(
-        { title: 'Error', body: 'Network Error - Rejection Failed' },
-        'error'
-      );
+    } finally {
+      setLoadingAction({ id: null, type: null });
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are You Sure ?")) {
-      return;
-    }
+    if (!window.confirm("Are You Sure ?")) return;
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/delete-application/${id}`, {
@@ -128,34 +98,16 @@ function InternshipTable() {
       });
 
       if (response.ok) {
-        addToast(
-          { title: 'Success', body: 'Application Deletion Success !' },
-          'success'
-        );
         fetchApplications();
-      } else {
-        addToast(
-          { title: 'Error', body: 'Application Deletion Failed !' },
-          'error'
-        );
       }
     } catch (error) {
       console.error("Error Deleting Application:", error);
-      addToast(
-        { title: 'Error', body: 'Application Deletion Failed !' },
-        'error'
-      );
     }
   };
 
   const handleDownload = (filePath, fileName) => {
     if (filePath && filePath.endsWith(".pdf")) {
       window.open(`${import.meta.env.VITE_API_URL}/${filePath}`, "_blank");
-    } else {
-      addToast(
-        { title: 'Error', body: 'No File To Download !' },
-        'error'
-      );
     }
   };
 
@@ -270,8 +222,13 @@ function InternshipTable() {
                         <button
                           className="action-btn approve-btn"
                           onClick={() => handleApprove(app._id)}
+                          disabled={loadingAction.id === app._id && loadingAction.type === "approve"}
                         >
-                          Approve
+                          {loadingAction.id === app._id && loadingAction.type === "approve" ? (
+                            <span className="spinner"></span>
+                          ) : (
+                            "Approve"
+                          )}
                         </button>
                       )}
                     </td>
@@ -280,8 +237,13 @@ function InternshipTable() {
                         <button
                           className="action-btn reject-btn"
                           onClick={() => handleReject(app._id)}
+                          disabled={loadingAction.id === app._id && loadingAction.type === "reject"}
                         >
-                          Reject
+                          {loadingAction.id === app._id && loadingAction.type === "reject" ? (
+                            <span className="spinner"></span>
+                          ) : (
+                            "Reject"
+                          )}
                         </button>
                       )}
                     </td>
@@ -308,8 +270,6 @@ function InternshipTable() {
           </div>
         )}
       </div>
-
-
     </div>
   );
 }
