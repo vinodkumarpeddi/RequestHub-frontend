@@ -10,7 +10,7 @@ function InternshipTable() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
-    const [buttonLoading, setButtonLoading] = useState({}); // Spinner state
+    const [buttonLoading, setButtonLoading] = useState({});
 
     useEffect(() => {
         fetchApplications();
@@ -19,12 +19,18 @@ function InternshipTable() {
     const fetchApplications = async () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             setApplications(data);
-            setLoading(false);
         } catch (error) {
             console.error("Error Fetching Applications:", error);
-            addToast({ title: 'Error', body: "Failed To Fetch !" }, 'error');
+            addToast({ 
+                title: 'Error', 
+                body: error.message || "Failed to fetch applications" 
+            }, 'error');
+        } finally {
             setLoading(false);
         }
     };
@@ -38,61 +44,91 @@ function InternshipTable() {
                 body: JSON.stringify({ id }),
             });
 
-            const data = await response.json();
-            if (data.success) {
-                addToast({ title: 'Success', body: 'Application Approval Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Approval Failed !' }, 'error');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Approval failed");
             }
+
+            const data = await response.json();
+            addToast({ 
+                title: 'Success', 
+                body: data.message || 'Application approved successfully!' 
+            }, 'success');
+            fetchApplications();
         } catch (error) {
             console.error("Error Approving Application:", error);
-            addToast({ title: 'Error', body: 'Application Approval Failed !' }, 'error');
+            addToast({ 
+                title: 'Error', 
+                body: error.message || 'Failed to approve application' 
+            }, 'error');
         } finally {
             setButtonLoading(prev => ({ ...prev, [id]: null }));
         }
     };
 
     const handleReject = async (id) => {
+        const reason = window.prompt("Please enter the reason for rejection:");
+        if (!reason || reason.trim().length < 5) {
+            addToast({
+                title: 'Warning',
+                body: 'Please provide a valid reason (minimum 5 characters)'
+            }, 'warning');
+            return;
+        }
+
         setButtonLoading(prev => ({ ...prev, [id]: 'reject' }));
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id }),
+                body: JSON.stringify({ id, reason }),
             });
 
-            const data = await response.json();
-            if (data.success) {
-                addToast({ title: 'Success', body: 'Application Rejection Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Rejection Failed !' }, 'error');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Rejection failed");
             }
+
+            const data = await response.json();
+            addToast({ 
+                title: 'Success', 
+                body: data.message || 'Application rejected successfully!' 
+            }, 'success');
+            fetchApplications();
         } catch (error) {
             console.error("Error Rejecting Application:", error);
-            addToast({ title: 'Error', body: 'Application Rejection Failed !' }, 'error');
+            addToast({ 
+                title: 'Error', 
+                body: error.message || 'Failed to reject application' 
+            }, 'error');
         } finally {
             setButtonLoading(prev => ({ ...prev, [id]: null }));
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are You Sure ?")) return;
+        if (!window.confirm("Are you sure you want to delete this application?")) return;
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/delete-application/${id}`, {
                 method: "DELETE",
             });
 
-            if (response.ok) {
-                addToast({ title: 'Success', body: 'Application Deletion Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Deletion Failed !' }, 'error');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Deletion failed");
             }
+
+            addToast({ 
+                title: 'Success', 
+                body: 'Application deleted successfully!' 
+            }, 'success');
+            fetchApplications();
         } catch (error) {
             console.error("Error Deleting Application:", error);
-            addToast({ title: 'Error', body: 'Application Deletion Failed !' }, 'error');
+            addToast({ 
+                title: 'Error', 
+                body: error.message || 'Failed to delete application' 
+            }, 'error');
         }
     };
 
@@ -100,18 +136,21 @@ function InternshipTable() {
         if (filePath && filePath.endsWith(".pdf")) {
             window.open(`${import.meta.env.VITE_API_URL}/${filePath}`, "_blank");
         } else {
-            addToast({ title: 'Error', body: 'No File To Download !' }, 'error');
+            addToast({ 
+                title: 'Error', 
+                body: 'No PDF file available for download' 
+            }, 'error');
         }
     };
 
     const filteredApplications = applications.filter(app => {
         const searchLower = searchTerm.toLowerCase();
         return (
-            app.name.toLowerCase().includes(searchLower) ||
-            app.rollNumber.toLowerCase().includes(searchLower) ||
-            app.college.toLowerCase().includes(searchLower) ||
-            app.internshipInstitute.toLowerCase().includes(searchLower) ||
-            app.status.toLowerCase().includes(searchLower)
+            app.name?.toLowerCase().includes(searchLower) ||
+            app.rollNumber?.toLowerCase().includes(searchLower) ||
+            app.college?.toLowerCase().includes(searchLower) ||
+            app.internshipInstitute?.toLowerCase().includes(searchLower) ||
+            app.status?.toLowerCase().includes(searchLower)
         );
     });
 
@@ -134,7 +173,7 @@ function InternshipTable() {
                 <div className="search-bar">
                     <input
                         type="text"
-                        placeholder="Search Roll Number, name, college..."
+                        placeholder="Search by name, roll number, college..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
@@ -192,90 +231,96 @@ function InternshipTable() {
                     <div className="loading-spinner">Loading...</div>
                 ) : (
                     <div className="applications-table-container">
-                        <table className="applications-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Roll No.</th>
-                                    <th>College</th>
-                                    <th>Institute</th>
-                                    <th className="date-col">Dates</th>
-                                    <th>Status</th>
-                                    <th className="action-col">Approve</th>
-                                    <th className="action-col">Reject</th>
-                                    <th className="action-col">Del</th>
-                                    <th className="action-col">PDF</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentItems.map((app) => (
-                                    <tr key={app._id}>
-                                        <td>{app.name}</td>
-                                        <td>{app.rollNumber}</td>
-                                        <td>{app.college}</td>
-                                        <td>{app.internshipInstitute}</td>
-                                        <td className="date-col">
-                                            {new Date(app.startDate).toLocaleDateString()} -{" "}
-                                            {new Date(app.endDate).toLocaleDateString()}
-                                        </td>
-                                        <td>
-                                            <span className={`status-badge ${app.status.toLowerCase()}`}>
-                                                {app.status}
-                                            </span>
-                                        </td>
-                                        <td className="action-col">
-                                            {app.status !== "Approved" && (
-                                                <button
-                                                    className="action-btn approve-btn"
-                                                    onClick={() => handleApprove(app._id)}
-                                                    disabled={buttonLoading[app._id] === 'approve'}
-                                                >
-                                                    {buttonLoading[app._id] === 'approve' ? (
-                                                        <span className="spinner"></span>
-                                                    ) : 'Approve'}
-                                                </button>
-                                            )}
-                                        </td>
-                                        <td className="action-col">
-                                            {app.status !== "Rejected" && (
-                                                <button
-                                                    className="action-btn reject-btn"
-                                                    onClick={() => handleReject(app._id)}
-                                                    disabled={buttonLoading[app._id] === 'reject'}
-                                                >
-                                                    {buttonLoading[app._id] === 'reject' ? (
-                                                        <span className="spinner"></span>
-                                                    ) : 'Reject'}
-                                                </button>
-                                            )}
-                                        </td>
-                                        <td className="action-col">
-                                            <button
-                                                className="action-btn delete-btn"
-                                                onClick={() => handleDelete(app._id)}
-                                            >
-                                                Del
-                                            </button>
-                                        </td>
-                                        <td className="action-col">
-                                            <button
-                                                className="action-btn download-btn"
-                                                onClick={() =>
-                                                    handleDownload(app.offerLetterPath, `${app.name}_offer_letter.pdf`)
-                                                }
-                                            >
-                                                Dow.
-                                            </button>
-                                        </td>
+                        {currentItems.length === 0 ? (
+                            <div className="no-results">
+                                No applications found matching your search criteria
+                            </div>
+                        ) : (
+                            <table className="applications-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Roll No.</th>
+                                        <th>College</th>
+                                        <th>Institute</th>
+                                        <th className="date-col">Dates</th>
+                                        <th>Status</th>
+                                        <th className="action-col">Approve</th>
+                                        <th className="action-col">Reject</th>
+                                        <th className="action-col">Del</th>
+                                        <th className="action-col">PDF</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {currentItems.map((app) => (
+                                        <tr key={app._id}>
+                                            <td>{app.name}</td>
+                                            <td>{app.rollNumber}</td>
+                                            <td>{app.college}</td>
+                                            <td>{app.internshipInstitute}</td>
+                                            <td className="date-col">
+                                                {new Date(app.startDate).toLocaleDateString()} -{" "}
+                                                {new Date(app.endDate).toLocaleDateString()}
+                                            </td>
+                                            <td>
+                                                <span className={`status-badge ${app.status.toLowerCase()}`}>
+                                                    {app.status}
+                                                </span>
+                                            </td>
+                                            <td className="action-col">
+                                                {app.status !== "Approved" && (
+                                                    <button
+                                                        className="action-btn approve-btn"
+                                                        onClick={() => handleApprove(app._id)}
+                                                        disabled={buttonLoading[app._id] === 'approve'}
+                                                    >
+                                                        {buttonLoading[app._id] === 'approve' ? (
+                                                            <span className="spinner"></span>
+                                                        ) : 'Approve'}
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td className="action-col">
+                                                {app.status !== "Rejected" && (
+                                                    <button
+                                                        className="action-btn reject-btn"
+                                                        onClick={() => handleReject(app._id)}
+                                                        disabled={buttonLoading[app._id] === 'reject'}
+                                                    >
+                                                        {buttonLoading[app._id] === 'reject' ? (
+                                                            <span className="spinner"></span>
+                                                        ) : 'Reject'}
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td className="action-col">
+                                                <button
+                                                    className="action-btn delete-btn"
+                                                    onClick={() => handleDelete(app._id)}
+                                                >
+                                                    Del
+                                                </button>
+                                            </td>
+                                            <td className="action-col">
+                                                <button
+                                                    className="action-btn download-btn"
+                                                    onClick={() =>
+                                                        handleDownload(app.offerLetterPath, `${app.name}_offer_letter.pdf`)
+                                                    }
+                                                    disabled={!app.offerLetterPath}
+                                                >
+                                                    {app.offerLetterPath ? 'Dow.' : 'N/A'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 )}
             </div>
 
-            {/* Spinner Styles */}
             <style>{`
                 .spinner {
                     width: 16px;
@@ -290,6 +335,13 @@ function InternshipTable() {
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
+                }
+
+                .no-results {
+                    padding: 20px;
+                    text-align: center;
+                    font-size: 1.1rem;
+                    color: #666;
                 }
             `}</style>
         </div>
