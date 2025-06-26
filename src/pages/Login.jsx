@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { useToast } from "../context/ToastContext";
-import { FaUser, FaIdCard, FaEnvelope, FaLock, FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
+import { FaUser, FaIdCard, FaEnvelope, FaLock, FaSpinner, FaCheck, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const { addToast } = useToast();
@@ -22,7 +22,9 @@ const Login = () => {
     password: "",
     confirmPassword: "",
   });
-  const [buttonState, setButtonState] = useState('default'); // 'default', 'loading', 'success', 'error'
+  const [buttonState, setButtonState] = useState('default');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateName = (value) => {
     if (value.length > 14) {
@@ -152,12 +154,19 @@ const Login = () => {
     validateConfirmPassword(value);
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   const onSubmitHandler = async (e) => {
     try {
       e.preventDefault();
       setButtonState('loading');
 
-      // Validate all fields
       const isNameValid = state === "Sign Up" ? validateName(name) : true;
       const isEmailValid = validateEmail(email);
       const isRollNumberValid = validateRollNumber(rollNumber);
@@ -187,7 +196,6 @@ const Login = () => {
       axios.defaults.withCredentials = true;
 
       if (state === "Sign Up") {
-        // Sign Up Logic
         const response = await axios.post(`${backendUrl}/api/auth/register`, {
           name,
           rollNumber,
@@ -234,7 +242,6 @@ const Login = () => {
           );
         }
       } else {
-        // Login Logic
         const response = await axios.post(`${backendUrl}/api/auth/login`, {
           rollNumber,
           email,
@@ -338,6 +345,87 @@ const Login = () => {
       );
     }
   };
+
+  const FormInput = ({
+    icon,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+    error,
+    required,
+    showPasswordToggle = false,
+    onTogglePassword = () => {},
+    isPasswordVisible = false
+  }) => (
+    <>
+      <div style={{ position: "relative", marginBottom: "4px" }}>
+        <span
+          className={value ? "icon-animate" : ""}
+          style={{
+            position: "absolute",
+            left: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: "16px",
+            color: "#666",
+            opacity: value ? 0 : 1,
+            transition: "opacity 0.3s ease, transform 0.3s ease",
+          }}
+        >
+          {icon}
+        </span>
+        <input
+          value={value}
+          onChange={onChange}
+          placeholder={value ? "" : placeholder}
+          required={required}
+          type={type}
+          className={value ? "placeholder-animate" : ""}
+          style={{
+            width: "100%",
+            padding: value ? "12px 12px" : "12px 12px 12px 40px",
+            border: error ? "1px solid #ff4444" : "1px solid #ddd",
+            borderRadius: "4px",
+            fontSize: "14px",
+            color: "#222",
+            transition: "border-color 0.2s, padding 0.3s ease",
+            boxSizing: "border-box",
+            paddingRight: showPasswordToggle ? "40px" : "12px"
+          }}
+        />
+        {showPasswordToggle && (
+          <span
+            onClick={onTogglePassword}
+            style={{
+              position: "absolute",
+              right: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "16px",
+              color: "#666",
+              cursor: "pointer",
+              transition: "color 0.2s ease"
+            }}
+          >
+            {isPasswordVisible ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        )}
+      </div>
+      {error && (
+        <p
+          style={{
+            color: "#ff4444",
+            fontSize: "12px",
+            margin: "0 0 12px 0",
+            textAlign: "right",
+          }}
+        >
+          {error}
+        </p>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -521,9 +609,12 @@ const Login = () => {
             value={password}
             onChange={handlePasswordChange}
             placeholder={state === "Sign Up" ? "Set Password" : "Password"}
-            type="password"
+            type={showPassword ? "text" : "password"}
             error={errors.password}
             required
+            showPasswordToggle={true}
+            onTogglePassword={togglePasswordVisibility}
+            isPasswordVisible={showPassword}
           />
           {state === "Sign Up" && (
             <FormInput
@@ -531,9 +622,12 @@ const Login = () => {
               value={confirmPassword}
               onChange={handleConfirmPasswordChange}
               placeholder="Confirm Password"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               error={errors.confirmPassword}
               required
+              showPasswordToggle={true}
+              onTogglePassword={toggleConfirmPasswordVisibility}
+              isPasswordVisible={showConfirmPassword}
             />
           )}
           <div
@@ -648,65 +742,5 @@ const Login = () => {
     </div>
   );
 };
-
-const FormInput = ({
-  icon,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  error,
-  required,
-}) => (
-  <>
-    <div style={{ position: "relative", marginBottom: "4px" }}>
-      <span
-        className={value ? "icon-animate" : ""}
-        style={{
-          position: "absolute",
-          left: "12px",
-          top: "50%",
-          transform: "translateY(-50%)",
-          fontSize: "16px",
-          color: "#666",
-          opacity: value ? 0 : 1,
-          transition: "opacity 0.3s ease, transform 0.3s ease",
-        }}
-      >
-        {icon}
-      </span>
-      <input
-        value={value}
-        onChange={onChange}
-        placeholder={value ? "" : placeholder}
-        required={required}
-        type={type}
-        className={value ? "placeholder-animate" : ""}
-        style={{
-          width: "100%",
-          padding: value ? "12px 12px" : "12px 12px 12px 40px",
-          border: error ? "1px solid #ff4444" : "1px solid #ddd",
-          borderRadius: "4px",
-          fontSize: "14px",
-          color: "#222",
-          transition: "border-color 0.2s, padding 0.3s ease",
-          boxSizing: "border-box",
-        }}
-      />
-    </div>
-    {error && (
-      <p
-        style={{
-          color: "#ff4444",
-          fontSize: "12px",
-          margin: "0 0 12px 0",
-          textAlign: "right",
-        }}
-      >
-        {error}
-      </p>
-    )}
-  </>
-);
 
 export default Login;
