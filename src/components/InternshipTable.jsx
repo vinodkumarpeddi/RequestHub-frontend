@@ -32,7 +32,7 @@ function InternshipTable() {
     const handleApprove = async (id) => {
         setButtonLoading(prev => ({ ...prev, [id]: 'approve' }));
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id }),
@@ -56,7 +56,7 @@ function InternshipTable() {
     const handleReject = async (id) => {
         setButtonLoading(prev => ({ ...prev, [id]: 'reject' }));
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id }),
