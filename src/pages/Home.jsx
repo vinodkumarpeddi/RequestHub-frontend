@@ -361,3 +361,4 @@ const ServiceCard = ({ icon, title, description, color }) => {
 };
 
 export default Home;
+   
