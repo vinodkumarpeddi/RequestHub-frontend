@@ -10,7 +10,7 @@ function InternshipTable() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
-    const [buttonLoading, setButtonLoading] = useState({}); // Spinner state
+    const [buttonLoading, setButtonLoading] = useState({});
 
     useEffect(() => {
         fetchApplications();
@@ -35,7 +35,7 @@ function InternshipTable() {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id }),
+                body: JSON.stringify({}),
             });
 
             const data = await response.json();
@@ -54,14 +54,16 @@ function InternshipTable() {
     };
 
     const handleReject = async (id) => {
+        const reason = prompt("Enter reason for rejection:");
+        if (!reason) return;
+
         setButtonLoading(prev => ({ ...prev, [id]: 'reject' }));
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id }),
+                body: JSON.stringify({ reason }),
             });
-            console.log("Response:", response);
 
             const data = await response.json();
             if (data.success) {
@@ -97,7 +99,7 @@ function InternshipTable() {
         }
     };
 
-    const handleDownload = (filePath, fileName) => {
+    const handleDownload = (filePath) => {
         if (filePath && filePath.endsWith(".pdf")) {
             window.open(`${import.meta.env.VITE_API_URL}/${filePath}`, "_blank");
         } else {
@@ -216,8 +218,7 @@ function InternshipTable() {
                                         <td>{app.college}</td>
                                         <td>{app.internshipInstitute}</td>
                                         <td className="date-col">
-                                            {new Date(app.startDate).toLocaleDateString()} -{" "}
-                                            {new Date(app.endDate).toLocaleDateString()}
+                                            {new Date(app.startDate).toLocaleDateString()} - {new Date(app.endDate).toLocaleDateString()}
                                         </td>
                                         <td>
                                             <span className={`status-badge ${app.status.toLowerCase()}`}>
@@ -261,9 +262,7 @@ function InternshipTable() {
                                         <td className="action-col">
                                             <button
                                                 className="action-btn download-btn"
-                                                onClick={() =>
-                                                    handleDownload(app.offerLetterPath, `${app.name}_offer_letter.pdf`)
-                                                }
+                                                onClick={() => handleDownload(app.offerLetterPath)}
                                             >
                                                 Dow.
                                             </button>
