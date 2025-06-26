@@ -63,31 +63,17 @@ function InternshipTable() {
       const data = await response.json();
 
       // Check for success more flexibly
-      if (response.ok) {
-        addToast(
-          { title: 'Success', body: 'Application Approved Successfully!' },
-          'success'
-        );
+      
 
         // Update local state immediately
         setApplications(prev => prev.map(app =>
           app._id === id ? { ...app, status: "Approved" } : app
         ));
 
-        // Optional: refresh data from server to ensure consistency
-        // fetchApplications();
-      } else {
-        addToast(
-          { title: 'Error', body: data.message || 'Approval Failed' },
-          'error'
-        );
-      }
+        fetchApplications();
+      
     } catch (error) {
       console.error("Error Approving Application:", error);
-      addToast(
-        { title: 'Error', body: 'Network Error - Approval Failed' },
-        'error'
-      );
     }
   };
 
@@ -113,6 +99,8 @@ function InternshipTable() {
         setApplications(prev => prev.map(app =>
           app._id === id ? { ...app, status: "Rejected" } : app
         ));
+
+        fetchApplications();
 
       } else {
         addToast(
