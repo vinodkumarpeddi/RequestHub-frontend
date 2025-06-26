@@ -10,7 +10,6 @@ function InternshipTable() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
-    const [buttonLoading, setButtonLoading] = useState({});
 
     useEffect(() => {
         fetchApplications();
@@ -24,86 +23,14 @@ function InternshipTable() {
             setLoading(false);
         } catch (error) {
             console.error("Error Fetching Applications:", error);
-            addToast({ title: 'Error', body: "Failed To Fetch !" }, 'error');
+            addToast(
+                {
+                    title: 'Error',
+                    body: "Failed To Fetch !"
+                },
+                'error'
+            );
             setLoading(false);
-        }
-    };
-
-    const handleApprove = async (id) => {
-        setButtonLoading(prev => ({ ...prev, [id]: 'approve' }));
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({}),
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                addToast({ title: 'Success', body: 'Application Approval Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Approval Failed !' }, 'error');
-            }
-        } catch (error) {
-            console.error("Error Approving Application:", error);
-            addToast({ title: 'Error', body: 'Application Approval Failed !' }, 'error');
-        } finally {
-            setButtonLoading(prev => ({ ...prev, [id]: null }));
-        }
-    };
-
-    const handleReject = async (id) => {
-        const reason = prompt("Enter reason for rejection:");
-        if (!reason) return;
-
-        setButtonLoading(prev => ({ ...prev, [id]: 'reject' }));
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ reason }),
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                addToast({ title: 'Success', body: 'Application Rejection Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Rejection Failed !' }, 'error');
-            }
-        } catch (error) {
-            console.error("Error Rejecting Application:", error);
-            addToast({ title: 'Error', body: 'Application Rejection Failed !' }, 'error');
-        } finally {
-            setButtonLoading(prev => ({ ...prev, [id]: null }));
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are You Sure ?")) return;
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/delete-application/${id}`, {
-                method: "DELETE",
-            });
-
-            if (response.ok) {
-                addToast({ title: 'Success', body: 'Application Deletion Success !' }, 'success');
-                fetchApplications();
-            } else {
-                addToast({ title: 'Error', body: 'Application Deletion Failed !' }, 'error');
-            }
-        } catch (error) {
-            console.error("Error Deleting Application:", error);
-            addToast({ title: 'Error', body: 'Application Deletion Failed !' }, 'error');
-        }
-    };
-
-    const handleDownload = (filePath) => {
-        if (filePath && filePath.endsWith(".pdf")) {
-            window.open(`${import.meta.env.VITE_API_URL}/${filePath}`, "_blank");
-        } else {
-            addToast({ title: 'Error', body: 'No File To Download !' }, 'error');
         }
     };
 
@@ -123,7 +50,115 @@ function InternshipTable() {
     const currentItems = filteredApplications.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
 
-    const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+    const handleApprove = async (id) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                addToast(
+                    { title: 'Success', body: 'Application Approval Success !' },
+                    'success'
+                );
+                fetchApplications();
+            } else {
+                addToast(
+                    { title: 'Error', body: 'Application Approval Failed !' },
+                    'error'
+                );
+            }
+        } catch (error) {
+            console.error("Error Approving Application:", error);
+            addToast(
+                { title: 'Error', body: 'Application Approval Failed !' },
+                'error'
+            );
+        }
+    };
+
+    const handleReject = async (id) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                addToast(
+                    { title: 'Success', body: 'Application Rejection Success !' },
+                    'success'
+                ); fetchApplications();
+            } else {
+                addToast(
+                    { title: 'Error', body: 'Application Rejection Failed !' },
+                    'error'
+                );
+            }
+        } catch (error) {
+            console.error("Error Rejecting Application:", error);
+            addToast(
+                { title: 'Error', body: 'Application Rejection Failed !' },
+                'error'
+            );
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are You Sure ?")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/delete-application/${id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                addToast(
+                    { title: 'Success', body: 'Application Deletion Success !' },
+                    'success'
+                );
+                fetchApplications();
+            } else {
+                addToast(
+                    { title: 'Error', body: 'Application Deletion Failed !' },
+                    'error'
+                );
+            }
+        } catch (error) {
+            console.error("Error Deleting Application:", error);
+            addToast(
+                { title: 'Error', body: 'Application Deletion Failed !' },
+                'error'
+            );
+        }
+    };
+
+    const handleDownload = (filePath, fileName) => {
+        if (filePath && filePath.endsWith(".pdf")) {
+            window.open(`${import.meta.env.VITE_API_URL}/${filePath}`, "_blank");
+        } else {
+            addToast(
+                { title: 'Error', body: 'No File To Download !' },
+                'error'
+            );
+        }
+    };
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
     const handleItemsPerPageChange = (e) => {
         setItemsPerPage(Number(e.target.value));
         setCurrentPage(1);
@@ -218,7 +253,8 @@ function InternshipTable() {
                                         <td>{app.college}</td>
                                         <td>{app.internshipInstitute}</td>
                                         <td className="date-col">
-                                            {new Date(app.startDate).toLocaleDateString()} - {new Date(app.endDate).toLocaleDateString()}
+                                            {new Date(app.startDate).toLocaleDateString()} -{" "}
+                                            {new Date(app.endDate).toLocaleDateString()}
                                         </td>
                                         <td>
                                             <span className={`status-badge ${app.status.toLowerCase()}`}>
@@ -230,11 +266,8 @@ function InternshipTable() {
                                                 <button
                                                     className="action-btn approve-btn"
                                                     onClick={() => handleApprove(app._id)}
-                                                    disabled={buttonLoading[app._id] === 'approve'}
                                                 >
-                                                    {buttonLoading[app._id] === 'approve' ? (
-                                                        <span className="spinner"></span>
-                                                    ) : 'Approve'}
+                                                    Approve
                                                 </button>
                                             )}
                                         </td>
@@ -243,11 +276,8 @@ function InternshipTable() {
                                                 <button
                                                     className="action-btn reject-btn"
                                                     onClick={() => handleReject(app._id)}
-                                                    disabled={buttonLoading[app._id] === 'reject'}
                                                 >
-                                                    {buttonLoading[app._id] === 'reject' ? (
-                                                        <span className="spinner"></span>
-                                                    ) : 'Reject'}
+                                                    Reject
                                                 </button>
                                             )}
                                         </td>
@@ -262,7 +292,7 @@ function InternshipTable() {
                                         <td className="action-col">
                                             <button
                                                 className="action-btn download-btn"
-                                                onClick={() => handleDownload(app.offerLetterPath)}
+                                                onClick={() => handleDownload(app.offerLetterPath, `${app.name}_offer_letter.pdf`)}
                                             >
                                                 Dow.
                                             </button>
@@ -275,23 +305,7 @@ function InternshipTable() {
                 )}
             </div>
 
-            {/* Spinner Styles */}
-            <style>{`
-                .spinner {
-                    width: 16px;
-                    height: 16px;
-                    border: 2px solid white;
-                    border-top: 2px solid transparent;
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                    display: inline-block;
-                }
 
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     );
 }
