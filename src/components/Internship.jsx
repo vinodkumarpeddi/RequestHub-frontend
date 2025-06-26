@@ -104,6 +104,7 @@ function Internship() {
     } finally {
       setIsSubmitting(false);
     }
+    console.log("Form Data Submitted:", formData);
   };
 
   return (

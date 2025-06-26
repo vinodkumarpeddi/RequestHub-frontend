@@ -9,24 +9,25 @@ const AppContextProvider = (props) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Set default config for axios (optional, centralize baseURL and credentials)
+  axios.defaults.baseURL = backendUrl;
+  axios.defaults.withCredentials = true;
+
   const getUserData = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/data`, {
-        withCredentials: true
-      });
-
+      const res = await axios.get("/api/user/data");
       if (res.data.success) {
         setUserData(res.data.userData);
         setIsLoggedin(true);
       } else {
-        console.log('Server Response:', res.data.message);
+        console.log("Server Response:", res.data.message);
         setIsLoggedin(false);
         setUserData(null);
       }
     } catch (error) {
       console.error("Failed To Fetch User Data:", {
         message: error.message,
-        response: error.response?.data
+        response: error.response?.data,
       });
       setIsLoggedin(false);
       setUserData(null);
@@ -35,9 +36,7 @@ const AppContextProvider = (props) => {
 
   const getAuthState = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/is-auth`, {
-        withCredentials: true
-      });
+      const { data } = await axios.get("/api/auth/is-auth");
       if (data.success) {
         await getUserData();
       } else {
@@ -45,9 +44,9 @@ const AppContextProvider = (props) => {
         setUserData(null);
       }
     } catch (error) {
+      console.error("Auth Check Failed:", error.message);
       setIsLoggedin(false);
       setUserData(null);
-      console.error("Auth Check Failed:", error.message);
     } finally {
       setLoading(false);
     }
@@ -64,7 +63,7 @@ const AppContextProvider = (props) => {
     userData,
     setUserData,
     getUserData,
-    loading
+    loading,
   };
 
   return (
