@@ -33,7 +33,7 @@ function InternshipTable() {
         setButtonLoading(prev => ({ ...prev, [id]: 'approve' }));
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/approve-application/${id}`, {
-                method: "PUT",
+                method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id }),
             });
@@ -57,7 +57,7 @@ function InternshipTable() {
         setButtonLoading(prev => ({ ...prev, [id]: 'reject' }));
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reject-application/${id}`, {
-                method: "PUT",
+                method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id }),
             });
