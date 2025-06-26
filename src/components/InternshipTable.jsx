@@ -55,7 +55,9 @@ function InternshipTable() {
 
       if (response.ok) {
         setApplications(prev =>
-          prev.map(app => app._id === id ? { ...app, status: "Approved" } : app)
+          prev.map(app =>
+            app._id === id ? { ...app, status: "Approved" } : app
+          )
         );
       }
     } catch (error) {
@@ -64,6 +66,7 @@ function InternshipTable() {
       setLoadingAction({ id: null, type: null });
     }
   };
+
 
   const handleReject = async (id) => {
     setLoadingAction({ id, type: "reject" });
@@ -79,7 +82,9 @@ function InternshipTable() {
 
       if (response.ok) {
         setApplications(prev =>
-          prev.map(app => app._id === id ? { ...app, status: "Rejected" } : app)
+          prev.map(app =>
+            app._id === id ? { ...app, status: "Rejected" } : app
+          )
         );
       }
     } catch (error) {
@@ -88,6 +93,7 @@ function InternshipTable() {
       setLoadingAction({ id: null, type: null });
     }
   };
+
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are You Sure ?")) return;

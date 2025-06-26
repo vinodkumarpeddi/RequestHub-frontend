@@ -5,6 +5,87 @@ import axios from "axios";
 import { useToast } from "../context/ToastContext";
 import { FaUser, FaIdCard, FaEnvelope, FaLock, FaSpinner, FaCheck, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 
+const FormInput = ({
+  icon,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  error,
+  required,
+  showPasswordToggle = false,
+  onTogglePassword = () => {},
+  isPasswordVisible = false
+}) => (
+  <>
+    <div style={{ position: "relative", marginBottom: "4px" }}>
+      <span
+        className={value ? "icon-animate" : ""}
+        style={{
+          position: "absolute",
+          left: "12px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          fontSize: "16px",
+          color: "#666",
+          opacity: value ? 0 : 1,
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+        }}
+      >
+        {icon}
+      </span>
+      <input
+        value={value}
+        onChange={onChange}
+        placeholder={value ? "" : placeholder}
+        required={required}
+        type={type}
+        className={value ? "placeholder-animate" : ""}
+        style={{
+          width: "100%",
+          padding: value ? "12px 12px" : "12px 12px 12px 40px",
+          border: error ? "1px solid #ff4444" : "1px solid #ddd",
+          borderRadius: "4px",
+          fontSize: "14px",
+          color: "#222",
+          transition: "border-color 0.2s, padding 0.3s ease",
+          boxSizing: "border-box",
+          paddingRight: showPasswordToggle ? "40px" : "12px"
+        }}
+      />
+      {showPasswordToggle && (
+        <span
+          onClick={onTogglePassword}
+          style={{
+            position: "absolute",
+            right: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: "16px",
+            color: "#666",
+            cursor: "pointer",
+            transition: "color 0.2s ease"
+          }}
+        >
+          {isPasswordVisible ? <FaEyeSlash /> : <FaEye />}
+        </span>
+      )}
+    </div>
+    {error && (
+      <p
+        style={{
+          color: "#ff4444",
+          fontSize: "12px",
+          margin: "0 0 12px 0",
+          textAlign: "right",
+        }}
+      >
+        {error}
+      </p>
+    )}
+  </>
+);
+
 const Login = () => {
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -345,87 +426,6 @@ const Login = () => {
       );
     }
   };
-
-  const FormInput = ({
-    icon,
-    value,
-    onChange,
-    placeholder,
-    type = "text",
-    error,
-    required,
-    showPasswordToggle = false,
-    onTogglePassword = () => {},
-    isPasswordVisible = false
-  }) => (
-    <>
-      <div style={{ position: "relative", marginBottom: "4px" }}>
-        <span
-          className={value ? "icon-animate" : ""}
-          style={{
-            position: "absolute",
-            left: "12px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            fontSize: "16px",
-            color: "#666",
-            opacity: value ? 0 : 1,
-            transition: "opacity 0.3s ease, transform 0.3s ease",
-          }}
-        >
-          {icon}
-        </span>
-        <input
-          value={value}
-          onChange={onChange}
-          placeholder={value ? "" : placeholder}
-          required={required}
-          type={type}
-          className={value ? "placeholder-animate" : ""}
-          style={{
-            width: "100%",
-            padding: value ? "12px 12px" : "12px 12px 12px 40px",
-            border: error ? "1px solid #ff4444" : "1px solid #ddd",
-            borderRadius: "4px",
-            fontSize: "14px",
-            color: "#222",
-            transition: "border-color 0.2s, padding 0.3s ease",
-            boxSizing: "border-box",
-            paddingRight: showPasswordToggle ? "40px" : "12px"
-          }}
-        />
-        {showPasswordToggle && (
-          <span
-            onClick={onTogglePassword}
-            style={{
-              position: "absolute",
-              right: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: "16px",
-              color: "#666",
-              cursor: "pointer",
-              transition: "color 0.2s ease"
-            }}
-          >
-            {isPasswordVisible ? <FaEyeSlash /> : <FaEye />}
-          </span>
-        )}
-      </div>
-      {error && (
-        <p
-          style={{
-            color: "#ff4444",
-            fontSize: "12px",
-            margin: "0 0 12px 0",
-            textAlign: "right",
-          }}
-        >
-          {error}
-        </p>
-      )}
-    </>
-  );
 
   return (
     <div
